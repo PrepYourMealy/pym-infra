@@ -1,0 +1,99 @@
+services:
+  # Deployment
+  watchtower:
+    image: containrrr/watchtower
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "30"
+      - "--rolling-restart"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Proxy and LetsEncrypt
+  reverse-proxy:
+    image: traefik:v3.1
+    command:
+      - "--providers.docker"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=henry.schwerdtner@web.de"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Front-End
+  front-end:
+    image: ghcr.io/prepyourmealy/pym-front-end:prod
+    container_name: front-end
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.guestbook.rule=Host(`prepmymealy.app`)"
+      - "traefik.http.routers.guestbook.entrypoints=websecure"
+      - "traefik.http.routers.guestbook.tls.certresolver=myresolver"
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - APPLICATION_SERVER_URL=http://server:3000
+    deploy:
+      mode: replicated
+      replicas: 2
+
+  # Application-Server
+  server:
+    image: ghcr.io/prepyourmealy/pym-application-server:prod
+    depends_on:
+      - db
+    container_name: server
+    restart: always
+    secrets:
+      - openai-secret
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://db:27017/pym
+      - OPENAI_API_KEY=/run/secrets/openai-secret
+    deploy:
+      mode: replicated
+      replicas: 2
+
+  # Scrape-Cron-Service
+  scrape:
+    image: ghcr.io/prepyourmealy/pym-scrape-cron:prod
+    depends_on:
+      - db
+      - server
+    container_name: scrape
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - APPLICATION_SERVER_URL=http://server:3000
+
+  # MongoDb
+  db:
+    image: mongo:latest
+    container_name: db
+    restart: always
+    volumes:
+      - db-data:/data/db
+
+
+volumes:
+  db-data:
+  letsencrypt:
+secrets:
+  clerk-secret:
+    file: clerk/secret/password.txt
+  clerk-public:
+    file: clerk/public/password.txt
+  openai-secret:
+    file: openai/password.txt
