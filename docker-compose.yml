@@ -43,8 +43,8 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - APPLICATION_SERVER_URL=http://server:3000
-      - CLERK_SECRET_KEY=/run/secrets/clerk-secret
-      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=/run/secrets/clerk-public
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     deploy:
       mode: replicated
       replicas: 2
@@ -98,7 +98,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://db:27017/pym
-      - OPENAI_API_KEY=/run/secrets/openai-secret
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   # Scrape-Cron-Service
   scrape:
