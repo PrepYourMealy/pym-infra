@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
     image: mongo-express:latest
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://db:27017/tracking-detector
+      - ME_CONFIG_MONGODB_URL=mongodb://db:27017/pym
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
       - ME_CONFIG_BASICAUTH=false
       - ME_CONFIG_SITE_BASEURL=/mongo
@@ -68,8 +68,6 @@ services:
       - 'traefik.http.routers.mongo-express.basicauth.userfile=./users.txt'
     depends_on:
       - db
-    networks:
-      - app-network
 
   # Portainer
   portainer:
@@ -87,8 +85,6 @@ services:
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
       - "traefik.http.routers.portainer.service=portainer"
       - "traefik.http.routers.portainer.tls.certresolver=myresolver"
-    networks:
-      - app-network
 
   # Application-Server
   server:
