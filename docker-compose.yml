@@ -33,7 +33,6 @@ services:
   # Front-End
   front-end:
     image: ghcr.io/prepyourmealy/pym-front-end:prod
-    container_name: front-end
     restart: always
     labels:
       - "traefik.enable=true"
@@ -63,9 +62,6 @@ services:
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://db:27017/pym
       - OPENAI_API_KEY=/run/secrets/openai-secret
-    deploy:
-      mode: replicated
-      replicas: 2
 
   # Scrape-Cron-Service
   scrape:
