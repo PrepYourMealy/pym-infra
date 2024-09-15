@@ -125,6 +125,7 @@ services:
 volumes:
   db-data:
   letsencrypt:
+  portainer_data:
 secrets:
   clerk-secret:
     file: clerk/secret/password.txt
