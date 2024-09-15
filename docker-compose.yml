@@ -48,6 +48,47 @@ services:
       mode: replicated
       replicas: 2
 
+  # Mongo Express
+  mongo-express:
+    container_name: mongo-express
+    restart: unless-stopped
+    image: mongo-express:latest
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://db:27017/tracking-detector
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_BASICAUTH=false
+      - ME_CONFIG_SITE_BASEURL=/mongo
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.mongo-express.rule=(Host(`dashboard.prepmymealy.app`) && PathPrefix(`/mongo`))'
+      - "traefik.http.services.mongo-express.loadbalancer.server.port=8081"
+      - "traefik.http.routers.mongo-express.entrypoints=websecure"
+      - "traefik.http.routers.mongo-express.tls.certresolver=myresolver"
+      - 'traefik.http.routers.mongo-express.basicauth.userfile=./users.txt'
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # Portainer
+  portainer:
+    image: portainer/portainer-ce:latest
+    command: -H unix:///var/run/docker.sock
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # if you want to persist settings, add the data volume mapping below
+      - portainer_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.prepmymealy.app`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+    networks:
+      - app-network
+
   # Application-Server
   server:
     image: ghcr.io/prepyourmealy/pym-application-server:prod
