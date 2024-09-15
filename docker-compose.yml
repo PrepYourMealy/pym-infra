@@ -65,7 +65,6 @@ services:
       - "traefik.http.services.mongo-express.loadbalancer.server.port=8081"
       - "traefik.http.routers.mongo-express.entrypoints=websecure"
       - "traefik.http.routers.mongo-express.tls.certresolver=myresolver"
-      - 'traefik.http.routers.mongo-express.basicauth.userfile=/login/users.txt'
     depends_on:
       - db
 
