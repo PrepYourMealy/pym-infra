@@ -53,7 +53,6 @@ services:
     image: ghcr.io/prepyourmealy/pym-application-server:prod
     depends_on:
       - db
-    container_name: server
     restart: always
     secrets:
       - openai-secret
